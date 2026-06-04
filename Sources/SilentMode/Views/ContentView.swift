@@ -88,6 +88,17 @@ private struct SettingsSection: View {
                 Divider()
 
                 SettingsToggleRow(
+                    title: "Turn on with screen saver",
+                    description: "Enables Silent Mode when the screen saver starts.",
+                    isOn: Binding(
+                        get: { settings.turnOnWithScreenSaver },
+                        set: { settings.setTurnOnWithScreenSaver($0) }
+                    )
+                )
+
+                Divider()
+
+                SettingsToggleRow(
                     title: "Show in Dock",
                     description: "Shows the application in the Dock when running.",
                     isOn: Binding(

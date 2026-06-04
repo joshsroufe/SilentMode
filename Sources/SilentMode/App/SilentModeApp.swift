@@ -7,6 +7,7 @@ struct SilentModeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var store = SilentModeStore()
     @State private var settings = AppSettingsStore()
+    @State private var screenSaverMonitor = ScreenSaverMonitor()
     private let syncTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some Scene {
@@ -15,6 +16,7 @@ struct SilentModeApp: App {
                 .frame(minWidth: 500, minHeight: 620)
                 .onAppear {
                     settings.applyStartupSettings()
+                    screenSaverMonitor.start(settings: settings, store: store)
                     store.refreshFromSystem(updateStatus: false)
                 }
                 .onReceive(syncTimer) { _ in

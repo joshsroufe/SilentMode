@@ -49,6 +49,26 @@ final class SilentModeStore {
         }
     }
 
+    func enableForScreenSaver() {
+        if isSilentModeEnabled {
+            refreshFromSystem(updateStatus: false)
+            return
+        }
+
+        enableSilentMode()
+        statusMessage = "Silent Mode turned on because the screen saver started."
+    }
+
+    func restoreAfterScreenSaver() {
+        refreshFromSystem(updateStatus: false)
+        guard isSilentModeEnabled else {
+            return
+        }
+
+        disableSilentMode()
+        statusMessage = "Silent Mode restored after the screen saver ended."
+    }
+
     func refreshFromSystem(updateStatus: Bool = true) {
         do {
             try? controller.synchronizeSystemSoundWithSharedState()

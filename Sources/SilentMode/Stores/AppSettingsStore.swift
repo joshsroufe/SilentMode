@@ -9,6 +9,7 @@ import ServiceManagement
 final class AppSettingsStore {
     private enum Key {
         static let openAtLogin = "Settings.openAtLogin"
+        static let turnOnWithScreenSaver = "Settings.turnOnWithScreenSaver"
         static let showInDock = "Settings.showInDock"
         static let showInMenuBar = "Settings.showInMenuBar"
     }
@@ -17,12 +18,14 @@ final class AppSettingsStore {
     private let logger = Logger(subsystem: "com.josh.silentmode", category: "Settings")
 
     private(set) var openAtLogin: Bool
+    private(set) var turnOnWithScreenSaver: Bool
     private(set) var showInDock: Bool
     private(set) var showInMenuBar: Bool
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         self.openAtLogin = defaults.object(forKey: Key.openAtLogin) as? Bool ?? false
+        self.turnOnWithScreenSaver = defaults.object(forKey: Key.turnOnWithScreenSaver) as? Bool ?? false
         self.showInDock = Self.persistedShowInDock(defaults: defaults)
         self.showInMenuBar = defaults.object(forKey: Key.showInMenuBar) as? Bool ?? true
     }
@@ -48,6 +51,11 @@ final class AppSettingsStore {
         } catch {
             logger.error("Failed to update login item: \(error.localizedDescription)")
         }
+    }
+
+    func setTurnOnWithScreenSaver(_ enabled: Bool) {
+        turnOnWithScreenSaver = enabled
+        defaults.set(enabled, forKey: Key.turnOnWithScreenSaver)
     }
 
     func setShowInDock(_ shown: Bool) {
