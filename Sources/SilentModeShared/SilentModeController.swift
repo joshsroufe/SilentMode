@@ -2,8 +2,6 @@ import CoreFoundation
 import Foundation
 
 struct SilentModeController {
-    static let sharedStateDidChangeNotification = Notification.Name("com.josh.silentmode.sharedStateDidChange")
-
     private let soundPreferences = SystemSoundPreferences()
     private let storedPreferences = StoredSilentModePreferences()
 
@@ -30,7 +28,6 @@ struct SilentModeController {
             storedPreferences.restoreAlertVolume = restoreVolume
         }
         storedPreferences.isSilentModeEnabled = enabled
-        notifySharedStateDidChange(enabled)
     }
 
     func applySystemSilentMode(_ enabled: Bool) throws {
@@ -58,14 +55,6 @@ struct SilentModeController {
         } else if !enabled && volume <= 0.001 {
             try applySystemSilentMode(false)
         }
-    }
-
-    private func notifySharedStateDidChange(_ enabled: Bool) {
-        DistributedNotificationCenter.default().post(
-            name: Self.sharedStateDidChangeNotification,
-            object: nil,
-            userInfo: ["isEnabled": enabled]
-        )
     }
 }
 

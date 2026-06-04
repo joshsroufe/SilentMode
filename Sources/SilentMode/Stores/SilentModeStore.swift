@@ -9,7 +9,6 @@ final class SilentModeStore {
     private let controller: SilentModeController
     private let logger = Logger(subsystem: "com.josh.silentmode", category: "SilentMode")
     private let controlKind = "com.josh.silentmode.control"
-    @ObservationIgnored private var sharedStateObserver: NSObjectProtocol?
 
     private(set) var isSilentModeEnabled: Bool
     private(set) var lastKnownAlertVolume: Double
@@ -22,19 +21,6 @@ final class SilentModeStore {
         self.statusMessage = ""
 
         refreshFromSystem()
-        sharedStateObserver = DistributedNotificationCenter.default().addObserver(
-            forName: SilentModeController.sharedStateDidChangeNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            self?.refreshFromSystem(updateStatus: false)
-        }
-    }
-
-    deinit {
-        if let sharedStateObserver {
-            DistributedNotificationCenter.default().removeObserver(sharedStateObserver)
-        }
     }
 
     func toggleSilentMode() {
@@ -108,6 +94,7 @@ final class SilentModeStore {
             try controller.applySystemSilentMode(true)
             logger.info("Silent Mode enabled")
         } catch {
+            statusMessage = "Silent Mode is on, but macOS blocked alert sound changes."
             logger.error("Failed to enable Silent Mode: \(error.localizedDescription)")
         }
 
@@ -125,6 +112,7 @@ final class SilentModeStore {
             lastKnownAlertVolume = volume
             logger.info("Silent Mode disabled")
         } catch {
+            statusMessage = "Silent Mode is off, but macOS blocked restoring alert sounds."
             logger.error("Failed to disable Silent Mode: \(error.localizedDescription)")
         }
 

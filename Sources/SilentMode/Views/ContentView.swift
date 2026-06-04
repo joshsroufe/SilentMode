@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct ContentView: View {
@@ -117,10 +118,88 @@ private struct SettingsSection: View {
                         set: { settings.setShowInMenuBar($0) }
                     )
                 )
+
+                Divider()
+
+                ControlCenterSettingsRow()
+
+                Divider()
+
+                CallSoundsSettingsRow()
             }
 
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct ControlCenterSettingsRow: View {
+    var body: some View {
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Control Center control")
+                    .font(.callout)
+
+                Text("Add Silent Mode to Control Center")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 16)
+
+            Button {
+                openSystemSettings([
+                    "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension",
+                    "x-apple.systempreferences:com.apple.ControlCenter"
+                ])
+            } label: {
+                Label("Open Control Center", systemImage: "switch.2")
+            }
+            .buttonStyle(.bordered)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct CallSoundsSettingsRow: View {
+    var body: some View {
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Call sounds")
+                    .font(.callout)
+
+                Text("Calling apps like FaceTime and Phone can only control ring sounds from Notification settings.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 16)
+
+            Button {
+                openSystemSettings([
+                    "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
+                    "x-apple.systempreferences:com.apple.preference.notifications"
+                ])
+            } label: {
+                Label("Open Notifications", systemImage: "gear")
+            }
+            .buttonStyle(.bordered)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private func openSystemSettings(_ settingsURLs: [String]) {
+    for settingsURL in settingsURLs {
+        guard let url = URL(string: settingsURL) else {
+            continue
+        }
+
+        if NSWorkspace.shared.open(url) {
+            return
+        }
     }
 }
 
