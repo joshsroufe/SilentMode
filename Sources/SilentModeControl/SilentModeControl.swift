@@ -1,4 +1,5 @@
 import AppIntents
+import os
 import SwiftUI
 import WidgetKit
 
@@ -31,12 +32,22 @@ struct SilentModeControl: ControlWidget {
 @available(macOS 26.0, *)
 extension SilentModeControl {
     struct Provider: ControlValueProvider {
+        private let logger = Logger(subsystem: "com.josh.silentmode", category: "ControlCenter")
+
         var previewValue: Bool {
             false
         }
 
         func currentValue() async throws -> Bool {
-            try SilentModeController().isSilentModeEnabled()
+            let controller = SilentModeController()
+            let enabled: Bool
+            if let sharedValue = controller.sharedSilentModeEnabled() {
+                enabled = sharedValue
+            } else {
+                enabled = try controller.isSystemSilentModeEnabled()
+            }
+            logger.info("Control Center currentValue returned \(enabled)")
+            return enabled
         }
     }
 }
@@ -44,15 +55,18 @@ extension SilentModeControl {
 @available(macOS 26.0, *)
 struct SetSilentModeIntent: SetValueIntent {
     static let title: LocalizedStringResource = "Set Silent Mode"
+    private let logger = Logger(subsystem: "com.josh.silentmode", category: "ControlCenter")
 
     @Parameter(title: "Silent Mode")
     var value: Bool
 
     func perform() async throws -> some IntentResult {
+        logger.info("Control Center perform started with value \(value)")
         let controller = SilentModeController()
         controller.setSharedSilentModeEnabled(value)
-        try? controller.applySystemSilentMode(value)
+        logger.info("Control Center perform saved shared value \(value)")
         ControlCenter.shared.reloadControls(ofKind: "com.josh.silentmode.control")
+        logger.info("Control Center perform requested control reload")
         return .result()
     }
 }

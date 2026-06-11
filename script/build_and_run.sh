@@ -50,7 +50,7 @@ killall ControlCenter >/dev/null 2>&1 || true
 killall Dock >/dev/null 2>&1 || true
 
 open_app() {
-  /usr/bin/open -n "$INSTALLED_APP_BUNDLE"
+  /usr/bin/open "$INSTALLED_APP_BUNDLE"
 }
 
 case "$MODE" in

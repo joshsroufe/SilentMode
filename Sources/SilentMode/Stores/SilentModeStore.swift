@@ -5,10 +5,13 @@ import os
 import WidgetKit
 
 @Observable
+@MainActor
 final class SilentModeStore {
     private let controller: SilentModeController
     private let logger = Logger(subsystem: "com.josh.silentmode", category: "SilentMode")
     private let controlKind = "com.josh.silentmode.control"
+    @ObservationIgnored private var syncTimer: Timer?
+    @ObservationIgnored private var sharedStateObserver: NSObjectProtocol?
 
     private(set) var isSilentModeEnabled: Bool
     private(set) var lastKnownAlertVolume: Double
@@ -21,6 +24,8 @@ final class SilentModeStore {
         self.statusMessage = ""
 
         refreshFromSystem()
+        startSharedStateObserver()
+        startSyncTimer()
     }
 
     func toggleSilentMode() {
@@ -85,6 +90,7 @@ final class SilentModeStore {
     }
 
     private func enableSilentMode() {
+        controller.setStoredSilentModeEnabled(true)
         controller.setSharedSilentModeEnabled(true)
         isSilentModeEnabled = true
         lastKnownAlertVolume = 0
@@ -102,6 +108,7 @@ final class SilentModeStore {
     }
 
     private func disableSilentMode() {
+        controller.setStoredSilentModeEnabled(false)
         controller.setSharedSilentModeEnabled(false)
         isSilentModeEnabled = false
         statusMessage = "Silent Mode is off. Local alert sounds can play."
@@ -124,4 +131,53 @@ final class SilentModeStore {
             ControlCenter.shared.reloadControls(ofKind: controlKind)
         }
     }
+
+    private func startSharedStateObserver() {
+        logger.info("Starting Control Center shared state observer")
+        sharedStateObserver = DistributedNotificationCenter.default().addObserver(
+            forName: SilentModeController.sharedStateDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            let enabled = notification.userInfo?["enabled"] as? Bool
+            Logger(subsystem: "com.josh.silentmode", category: "SilentMode").info("Received shared state notification with enabled \(String(describing: enabled))")
+            Task { @MainActor in
+                self?.applySharedStateChange(enabled: enabled)
+            }
+        }
+    }
+
+    private func applySharedStateChange(enabled: Bool?) {
+        guard let enabled else {
+            logger.info("Shared state notification did not include enabled; refreshing")
+            refreshFromSystem(updateStatus: false)
+            return
+        }
+
+        do {
+            logger.info("Applying Control Center shared state \(enabled)")
+            controller.setStoredSilentModeEnabled(enabled)
+            try controller.applySystemSilentMode(enabled)
+            let volume = try controller.alertVolume()
+            isSilentModeEnabled = enabled
+            lastKnownAlertVolume = volume
+            statusMessage = enabled ? "Notification and alert sounds are muted." : "Notification and alert sounds can play."
+            reloadControlCenterControl()
+        } catch {
+            statusMessage = "Could not apply the Control Center Silent Mode change."
+            logger.error("Failed to apply shared Silent Mode state: \(error.localizedDescription)")
+        }
+    }
+
+    private func startSyncTimer() {
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.refreshFromSystem(updateStatus: false)
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        syncTimer = timer
+    }
 }
+
+extension SilentModeStore: @unchecked Sendable {}

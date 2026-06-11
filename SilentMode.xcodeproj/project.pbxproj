@@ -319,11 +319,11 @@
 				CODE_SIGN_ENTITLEMENTS = Xcode/Entitlements/SilentMode.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GUA7MK96W5;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_STANDALONE_ICON_BEHAVIOR = all;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Silent Mode";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Xcode/Info/SilentMode-Info.plist";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.josh.silentmode;
 				PRODUCT_NAME = SilentMode;
@@ -339,11 +339,11 @@
 				CODE_SIGN_ENTITLEMENTS = Xcode/Entitlements/SilentMode.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GUA7MK96W5;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_STANDALONE_ICON_BEHAVIOR = all;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Silent Mode";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Xcode/Info/SilentMode-Info.plist";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.josh.silentmode;
 				PRODUCT_NAME = SilentMode;
@@ -361,6 +361,7 @@
 				CODE_SIGN_ENTITLEMENTS = Xcode/Entitlements/SilentModeControl.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GUA7MK96W5;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Xcode/Info/SilentModeControl-Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
@@ -382,6 +383,7 @@
 				CODE_SIGN_ENTITLEMENTS = Xcode/Entitlements/SilentModeControl.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GUA7MK96W5;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Xcode/Info/SilentModeControl-Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;

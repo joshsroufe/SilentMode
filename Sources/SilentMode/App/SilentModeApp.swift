@@ -1,5 +1,5 @@
 import AppKit
-import Combine
+import Darwin
 import SwiftUI
 
 @main
@@ -8,7 +8,6 @@ struct SilentModeApp: App {
     @State private var store = SilentModeStore()
     @State private var settings = AppSettingsStore()
     @State private var screenSaverMonitor = ScreenSaverMonitor()
-    private let syncTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some Scene {
         WindowGroup("Silent Mode", id: "main") {
@@ -17,9 +16,6 @@ struct SilentModeApp: App {
                 .onAppear {
                     settings.applyStartupSettings()
                     screenSaverMonitor.start(settings: settings, store: store)
-                    store.refreshFromSystem(updateStatus: false)
-                }
-                .onReceive(syncTimer) { _ in
                     store.refreshFromSystem(updateStatus: false)
                 }
         }
@@ -58,7 +54,15 @@ struct SilentModeApp: App {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private let singleInstanceGuard = SingleInstanceGuard()
+
     func applicationWillFinishLaunching(_ notification: Notification) {
+        guard singleInstanceGuard.acquire() else {
+            activateExistingInstance()
+            NSApp.terminate(nil)
+            return
+        }
+
         NSApp.setActivationPolicy(AppSettingsStore.persistedShowInDock() ? .regular : .accessory)
     }
 
@@ -66,5 +70,62 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if AppSettingsStore.persistedShowInDock() {
             NSApp.activate(ignoringOtherApps: true)
         }
+    }
+
+    private func activateExistingInstance() {
+        guard let bundleIdentifier = Bundle.main.bundleIdentifier else {
+            return
+        }
+
+        NSRunningApplication
+            .runningApplications(withBundleIdentifier: bundleIdentifier)
+            .filter { $0.processIdentifier != ProcessInfo.processInfo.processIdentifier }
+            .sorted { ($0.launchDate ?? .distantPast) < ($1.launchDate ?? .distantPast) }
+            .first?
+            .activate(options: [.activateAllWindows])
+    }
+}
+
+final class SingleInstanceGuard {
+    private var lockDescriptor: CInt = -1
+
+    func acquire() -> Bool {
+        guard lockDescriptor == -1 else {
+            return true
+        }
+
+        let lockFileURL = lockFileURL()
+        try? FileManager.default.createDirectory(
+            at: lockFileURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+
+        let descriptor = open(lockFileURL.path, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)
+        guard descriptor != -1 else {
+            return true
+        }
+
+        if flock(descriptor, LOCK_EX | LOCK_NB) == 0 {
+            lockDescriptor = descriptor
+            return true
+        }
+
+        close(descriptor)
+        return false
+    }
+
+    deinit {
+        if lockDescriptor != -1 {
+            flock(lockDescriptor, LOCK_UN)
+            close(lockDescriptor)
+        }
+    }
+
+    private func lockFileURL() -> URL {
+        let applicationSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        let baseURL = applicationSupport ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
+        return baseURL
+            .appendingPathComponent("SilentMode", isDirectory: true)
+            .appendingPathComponent("SilentMode.lock", isDirectory: false)
     }
 }
